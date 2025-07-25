@@ -1,24 +1,13 @@
 import streamlit as st
 import requests
 
-st.title("📊 Customer Monthly Charge Predictor")
+st.title("Customer Monthly Charge Predictor")
 
-# 🧾 Input form
-with st.form("customer_form"):
-    age = st.number_input("Enter Age", min_value=0, max_value=100, step=1)
-    tenure = st.number_input("Enter Tenure (in years)", min_value=0, step=1)
+age = st.number_input("Enter Age", min_value=18, max_value=100, step=1)
+tenure = st.number_input("Enter Tenure (in months)", min_value=0, step=1)
+services = st.multiselect("Select Services", ["Phone", "Internet", "TV", "Streaming", "Cloud"])
 
-    services = st.multiselect(
-        "Select Subscribed Services",
-        options=["Internet", "Phone", "TV"],
-        default=["Internet"]
-    )
-
-    submit = st.form_submit_button("Predict Monthly Charges")
-
-# 🧠 On form submit
-if submit:
-    # Request body payload
+if st.button("Predict Monthly Charge"):
     input_data = {
         "age": age,
         "tenure": tenure,
@@ -26,13 +15,11 @@ if submit:
     }
 
     try:
-        # 🚀 Send POST request to FastAPI
         response = requests.post("http://127.0.0.1:8000/predict/", json=input_data)
-
         if response.status_code == 200:
-            predicted_charge = response.json()["predicted_monthly_charge"]
-            st.success(f"💡 Predicted Monthly Charge: ₹{predicted_charge}")
+            prediction = response.json()["predicted_monthly_charge"]
+            st.success(f"Predicted Monthly Charge: ₹{prediction}")
         else:
-            st.error(f"❌ Error: {response.status_code} - {response.text}")
-    except Exception as e:
-        st.error(f"⚠️ Failed to connect to FastAPI server.\n{e}")
+            st.error(f"Error from server: {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        st.error(f"Failed to connect to FastAPI server: {e}")
